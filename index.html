@@ -3,49 +3,504 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LeetMetric</title>
+    <title>LeetMetric - LeetCode Analytics Dashboard</title>
     <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
     <div class="container">
-        <h1>LeetMetric</h1>
-
-        <div class="user-container">
-            <p>Enter your LeetCode username:</p>
-            <div class="user-input-container">
-            <input type="text" id="user-input" placeholder="Username">
-            <button id="search-btn">Search</button> 
+        <!-- Header Section -->
+        <div class="header">
+            <div class="logo">
+                <i class="fas fa-code"></i>
+                <h1>LeetMetric</h1>
+            </div>
+            <p class="subtitle">Analyze your LeetCode progress with detailed insights</p>
         </div>
+
+        <!-- Search Section -->
+        <div class="search-section">
+            <div class="search-container">
+                <div class="input-group">
+                    <i class="fas fa-user search-icon"></i>
+                    <input type="text" id="user-input" placeholder="Enter LeetCode username" autocomplete="off">
+                    <button id="search-btn">
+                        <i class="fas fa-search"></i>
+                        <span>Analyze</span>
+                    </button>
+                </div>
+                <div class="recent-searches" id="recent-searches" style="display: none;">
+                    <h4>Recent Searches</h4>
+                    <div class="recent-list" id="recent-list"></div>
+                </div>
+            </div>
         </div>
 
-        <div class="stats-container">
-            <div class="progress">
-                <div class="progress-item circle">
-                    <div class="easy-progress">
-                        <span class="easy-label"></span>
-                        Easy
+        <!-- Loading Animation -->
+        <div class="loading" id="loading" style="display: none;">
+            <div class="loading-spinner"></div>
+            <p>Fetching data...</p>
+        </div>
+
+        <!-- Stats Dashboard -->
+        <div class="stats-dashboard" id="stats-dashboard" style="display: none;">
+            <!-- User Profile Card -->
+            <div class="user-profile" id="user-profile">
+                <div class="profile-header">
+                    <div class="profile-info">
+                        <h2 id="username-display"></h2>
+                        <p class="profile-subtitle">LeetCode Statistics</p>
                     </div>
-                </div>
-                <div class="progress-item circle">
-                    <div class="medium-progress">
-                        <span class="medium-label"></span>
-                        Medium
-                    </div>
-                </div>
-                <div class="progress-item circle">
-                    <div class="hard-progress">
-                        <span class="hard-label"></span>
-                        Hard
+                    <div class="profile-actions">
+                        <button class="refresh-btn" id="refresh-btn">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
                     </div>
                 </div>
             </div>
-            <div class="stats-card">
-                <!-- directly card in js -->
+
+            <!-- Progress Circles -->
+            <div class="progress-section">
+                <h3>Problem Solving Progress</h3>
+                <div class="progress-grid">
+                    <div class="progress-card easy">
+                        <div class="progress-circle" id="easy-circle">
+                            <div class="progress-inner">
+                                <span class="progress-number" id="easy-count">0</span>
+                                <span class="progress-label">Easy</span>
+                            </div>
+                        </div>
+                        <div class="progress-details">
+                            <p class="solved-text">Solved: <span id="easy-solved">0</span></p>
+                            <p class="total-text">Total: <span id="easy-total">0</span></p>
+                            <div class="progress-bar">
+                                <div class="progress-fill easy-fill" id="easy-bar"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="progress-card medium">
+                        <div class="progress-circle" id="medium-circle">
+                            <div class="progress-inner">
+                                <span class="progress-number" id="medium-count">0</span>
+                                <span class="progress-label">Medium</span>
+                            </div>
+                        </div>
+                        <div class="progress-details">
+                            <p class="solved-text">Solved: <span id="medium-solved">0</span></p>
+                            <p class="total-text">Total: <span id="medium-total">0</span></p>
+                            <div class="progress-bar">
+                                <div class="progress-fill medium-fill" id="medium-bar"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="progress-card hard">
+                        <div class="progress-circle" id="hard-circle">
+                            <div class="progress-inner">
+                                <span class="progress-number" id="hard-count">0</span>
+                                <span class="progress-label">Hard</span>
+                            </div>
+                        </div>
+                        <div class="progress-details">
+                            <p class="solved-text">Solved: <span id="hard-solved">0</span></p>
+                            <p class="total-text">Total: <span id="hard-total">0</span></p>
+                            <div class="progress-bar">
+                                <div class="progress-fill hard-fill" id="hard-bar"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Statistics Cards -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-trophy"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 id="total-solved">0</h3>
+                        <p>Total Solved</p>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-percentage"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 id="success-rate">0%</h3>
+                        <p>Success Rate</p>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 id="ranking">-</h3>
+                        <p>Global Ranking</p>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-fire"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 id="streak">0</h3>
+                        <p>Current Streak</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Additional Features -->
+            <div class="additional-features">
+                <div class="feature-tabs">
+                    <button class="tab-btn active" data-tab="submission-stats">Submissions</button>
+                    <button class="tab-btn" data-tab="language-stats">Languages</button>
+                    <button class="tab-btn" data-tab="contest-stats">Contests</button>
+                    <button class="tab-btn" data-tab="calendar-stats">Calendar</button>
+                    <button class="tab-btn" data-tab="comparison-stats">Compare</button>
+                </div>
+
+                <div class="tab-content active" id="submission-stats">
+                    <div class="submissions-chart">
+                        <h4>Recent Submission Activity</h4>
+                        <div class="activity-heatmap" id="activity-heatmap">
+                            <!-- Heatmap will be generated by JavaScript -->
+                        </div>
+                        <div class="submission-timeline">
+                            <h5>Recent Submissions</h5>
+                            <div class="timeline-container" id="timeline-container">
+                                <!-- Timeline will be populated by JavaScript -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-content" id="language-stats">
+                    <div class="languages-chart">
+                        <h4>Programming Languages Used</h4>
+                        <div class="language-chart-container">
+                            <canvas id="language-chart" width="400" height="200"></canvas>
+                        </div>
+                        <div class="language-list" id="language-list">
+                            <!-- Languages will be populated by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-content" id="contest-stats">
+                    <div class="contest-info">
+                        <h4>Contest Performance</h4>
+                        <div class="contest-metrics">
+                            <div class="contest-card">
+                                <div class="contest-icon">
+                                    <i class="fas fa-medal"></i>
+                                </div>
+                                <div class="contest-data">
+                                    <h3 id="contest-rating">1500</h3>
+                                    <p>Current Rating</p>
+                                </div>
+                            </div>
+                            <div class="contest-card">
+                                <div class="contest-icon">
+                                    <i class="fas fa-trophy"></i>
+                                </div>
+                                <div class="contest-data">
+                                    <h3 id="contest-rank">Knight</h3>
+                                    <p>Current Rank</p>
+                                </div>
+                            </div>
+                            <div class="contest-card">
+                                <div class="contest-icon">
+                                    <i class="fas fa-chart-line"></i>
+                                </div>
+                                <div class="contest-data">
+                                    <h3 id="contest-attended">25</h3>
+                                    <p>Contests Attended</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="contest-graph">
+                            <h5>Rating Progress</h5>
+                            <canvas id="contest-chart" width="600" height="300"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-content" id="calendar-stats">
+                    <div class="calendar-view">
+                        <h4>Submission Calendar</h4>
+                        <div class="calendar-controls">
+                            <button class="calendar-nav" id="prev-month">
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+                            <span class="calendar-title" id="calendar-title">October 2025</span>
+                            <button class="calendar-nav" id="next-month">
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+                        </div>
+                        <div class="calendar-grid" id="calendar-grid">
+                            <!-- Calendar will be generated by JavaScript -->
+                        </div>
+                        <div class="calendar-legend">
+                            <span>Less</span>
+                            <div class="legend-colors">
+                                <div class="legend-color level-0"></div>
+                                <div class="legend-color level-1"></div>
+                                <div class="legend-color level-2"></div>
+                                <div class="legend-color level-3"></div>
+                                <div class="legend-color level-4"></div>
+                            </div>
+                            <span>More</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-content" id="comparison-stats">
+                    <div class="comparison-view">
+                        <h4>Compare with Others</h4>
+                        <div class="comparison-input">
+                            <input type="text" id="compare-username" placeholder="Enter username to compare">
+                            <button id="compare-btn">
+                                <i class="fas fa-balance-scale"></i>
+                                Compare
+                            </button>
+                        </div>
+                        <div class="comparison-results" id="comparison-results" style="display: none;">
+                            <div class="comparison-cards">
+                                <div class="comparison-card user1">
+                                    <h5 id="user1-name">User 1</h5>
+                                    <div class="comparison-stats" id="user1-stats">
+                                        <!-- Stats will be populated -->
+                                    </div>
+                                </div>
+                                <div class="comparison-vs">
+                                    <i class="fas fa-bolt"></i>
+                                    <span>VS</span>
+                                </div>
+                                <div class="comparison-card user2">
+                                    <h5 id="user2-name">User 2</h5>
+                                    <div class="comparison-stats" id="user2-stats">
+                                        <!-- Stats will be populated -->
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="comparison-chart">
+                                <canvas id="comparison-chart" width="600" height="300"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Problem Recommendations -->
+            <div class="recommendations-section">
+                <h3>
+                    <i class="fas fa-lightbulb"></i>
+                    Recommended Problems
+                </h3>
+                <div class="recommendations-grid" id="recommendations-grid">
+                    <!-- Recommendations will be populated by JavaScript -->
+                </div>
+            </div>
+
+            <!-- Progress Analytics -->
+            <div class="analytics-section">
+                <h3>
+                    <i class="fas fa-chart-pie"></i>
+                    Progress Analytics
+                </h3>
+                <div class="analytics-grid">
+                    <div class="analytics-card">
+                        <h4>Solving Patterns</h4>
+                        <div class="pattern-chart">
+                            <canvas id="pattern-chart" width="300" height="200"></canvas>
+                        </div>
+                    </div>
+                    <div class="analytics-card">
+                        <h4>Weekly Progress</h4>
+                        <div class="weekly-stats" id="weekly-stats">
+                            <!-- Weekly stats will be populated -->
+                        </div>
+                    </div>
+                    <div class="analytics-card">
+                        <h4>Accuracy Trends</h4>
+                        <div class="accuracy-chart">
+                            <canvas id="accuracy-chart" width="300" height="200"></canvas>
+                        </div>
+                    </div>
+                    <div class="analytics-card">
+                        <h4>Topic Distribution</h4>
+                        <div class="topic-breakdown" id="topic-breakdown">
+                            <!-- Topic breakdown will be populated -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Export and Settings -->
+            <div class="tools-section">
+                <div class="tools-grid">
+                    <div class="tool-card">
+                        <i class="fas fa-download"></i>
+                        <h4>Export Data</h4>
+                        <p>Download your statistics</p>
+                        <div class="export-buttons">
+                            <button class="export-btn" data-format="pdf">
+                                <i class="fas fa-file-pdf"></i>
+                                PDF
+                            </button>
+                            <button class="export-btn" data-format="csv">
+                                <i class="fas fa-file-csv"></i>
+                                CSV
+                            </button>
+                            <button class="export-btn" data-format="json">
+                                <i class="fas fa-file-code"></i>
+                                JSON
+                            </button>
+                        </div>
+                    </div>
+                    <div class="tool-card">
+                        <i class="fas fa-share-alt"></i>
+                        <h4>Share Profile</h4>
+                        <p>Share your progress with others</p>
+                        <div class="share-buttons">
+                            <button class="share-btn" data-platform="twitter">
+                                <i class="fab fa-twitter"></i>
+                                Twitter
+                            </button>
+                            <button class="share-btn" data-platform="linkedin">
+                                <i class="fab fa-linkedin"></i>
+                                LinkedIn
+                            </button>
+                            <button class="share-btn" data-platform="copy">
+                                <i class="fas fa-link"></i>
+                                Copy Link
+                            </button>
+                        </div>
+                    </div>
+                    <div class="tool-card">
+                        <i class="fas fa-cog"></i>
+                        <h4>Settings</h4>
+                        <p>Customize your experience</p>
+                        <div class="settings-options">
+                            <label class="setting-option">
+                                <input type="checkbox" id="dark-mode" checked>
+                                <span>Dark Mode</span>
+                            </label>
+                            <label class="setting-option">
+                                <input type="checkbox" id="animations">
+                                <span>Animations</span>
+                            </label>
+                            <label class="setting-option">
+                                <input type="checkbox" id="notifications">
+                                <span>Notifications</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI Chat Assistant -->
+        <div class="ai-chat-container" id="ai-chat-container">
+            <div class="chat-header">
+                <div class="chat-title">
+                    <i class="fas fa-robot"></i>
+                    <span>LeetCode AI Assistant</span>
+                </div>
+                <div class="chat-controls">
+                    <button class="chat-minimize" id="chat-minimize">
+                        <i class="fas fa-minus"></i>
+                    </button>
+                    <button class="chat-close" id="chat-close">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="chat-body" id="chat-body">
+                <div class="chat-welcome">
+                    <div class="welcome-avatar">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <h3>👋 Hello! I'm your LeetCode AI Assistant</h3>
+                    <p>I can help you with:</p>
+                    <div class="help-categories">
+                        <div class="help-category">
+                            <i class="fas fa-code"></i>
+                            <span>Algorithm explanations</span>
+                        </div>
+                        <div class="help-category">
+                            <i class="fas fa-lightbulb"></i>
+                            <span>Problem-solving hints</span>
+                        </div>
+                        <div class="help-category">
+                            <i class="fas fa-chart-line"></i>
+                            <span>Study plan guidance</span>
+                        </div>
+                        <div class="help-category">
+                            <i class="fas fa-bug"></i>
+                            <span>Code debugging</span>
+                        </div>
+                    </div>
+                    <div class="quick-questions">
+                        <h4>Quick Questions:</h4>
+                        <button class="quick-btn" data-question="How do I improve my algorithm skills?">
+                            How to improve algorithm skills?
+                        </button>
+                        <button class="quick-btn" data-question="What's the best way to approach dynamic programming?">
+                            Dynamic programming tips?
+                        </button>
+                        <button class="quick-btn" data-question="Explain time complexity in simple terms">
+                            Time complexity basics?
+                        </button>
+                        <button class="quick-btn" data-question="How to prepare for coding interviews?">
+                            Interview preparation?
+                        </button>
+                    </div>
+                </div>
+                <div class="chat-messages" id="chat-messages">
+                    <!-- Messages will be added here -->
+                </div>
+            </div>
+            <div class="chat-input-container">
+                <div class="chat-input-wrapper">
+                    <input type="text" id="chat-input" placeholder="Ask me anything about LeetCode, algorithms, or coding..." autocomplete="off">
+                    <button id="chat-send" disabled>
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+                <div class="chat-suggestions" id="chat-suggestions">
+                    <button class="suggestion-btn" data-suggestion="Explain binary search algorithm">Binary Search</button>
+                    <button class="suggestion-btn" data-suggestion="How to solve two pointers problems">Two Pointers</button>
+                    <button class="suggestion-btn" data-suggestion="Dynamic programming approach">Dynamic Programming</button>
+                    <button class="suggestion-btn" data-suggestion="Graph traversal techniques">Graph Algorithms</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chat Toggle Button -->
+        <button class="chat-toggle" id="chat-toggle">
+            <i class="fas fa-comments"></i>
+            <span class="chat-badge" id="chat-badge">AI</span>
+        </button>
+
+        <!-- Error Message -->
+        <div class="error-message" id="error-message" style="display: none;">
+            <div class="error-content">
+                <i class="fas fa-exclamation-triangle"></i>
+                <h3>Oops! Something went wrong</h3>
+                <p id="error-text">Please check the username and try again.</p>
+                <button class="retry-btn" id="retry-btn">Try Again</button>
             </div>
         </div>
     </div>
-
-
 
     <script src="script.js"></script>
 </body>
