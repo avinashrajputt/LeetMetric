@@ -171,20 +171,59 @@ class LeetMetric {
         const languageList = document.getElementById('language-list');
         if (!languageList) return;
 
-        // Enhanced mock language data
-        const languages = [
-            { name: 'Python', count: Math.floor(Math.random() * 50) + 20, color: '#3776ab' },
-            { name: 'JavaScript', count: Math.floor(Math.random() * 30) + 15, color: '#f7df1e' },
-            { name: 'Java', count: Math.floor(Math.random() * 40) + 18, color: '#ed8b00' },
-            { name: 'C++', count: Math.floor(Math.random() * 25) + 12, color: '#00599c' },
-            { name: 'Go', count: Math.floor(Math.random() * 15) + 5, color: '#00add8' }
-        ];
+        // Get user's preferred language from AI chat settings
+        const preferredLang = localStorage.getItem('preferredLanguage') || 'cpp';
+        
+        // Create realistic language data based on user's preference
+        let languages;
+        
+        if (preferredLang === 'cpp') {
+            // C++ developer profile - C++ dominant
+            languages = [
+                { name: 'C++', count: Math.floor(Math.random() * 30) + 45, color: '#00599c' },
+                { name: 'Python', count: Math.floor(Math.random() * 15) + 8, color: '#3776ab' },
+                { name: 'Java', count: Math.floor(Math.random() * 12) + 6, color: '#ed8b00' },
+                { name: 'JavaScript', count: Math.floor(Math.random() * 8) + 3, color: '#f7df1e' },
+                { name: 'C', count: Math.floor(Math.random() * 10) + 5, color: '#a8b9cc' }
+            ];
+        } else if (preferredLang === 'python') {
+            // Python developer profile
+            languages = [
+                { name: 'Python', count: Math.floor(Math.random() * 30) + 40, color: '#3776ab' },
+                { name: 'JavaScript', count: Math.floor(Math.random() * 20) + 15, color: '#f7df1e' },
+                { name: 'Java', count: Math.floor(Math.random() * 15) + 10, color: '#ed8b00' },
+                { name: 'C++', count: Math.floor(Math.random() * 12) + 8, color: '#00599c' },
+                { name: 'Go', count: Math.floor(Math.random() * 8) + 5, color: '#00add8' }
+            ];
+        } else if (preferredLang === 'java') {
+            // Java developer profile
+            languages = [
+                { name: 'Java', count: Math.floor(Math.random() * 30) + 38, color: '#ed8b00' },
+                { name: 'Python', count: Math.floor(Math.random() * 18) + 12, color: '#3776ab' },
+                { name: 'C++', count: Math.floor(Math.random() * 15) + 10, color: '#00599c' },
+                { name: 'JavaScript', count: Math.floor(Math.random() * 12) + 8, color: '#f7df1e' },
+                { name: 'Kotlin', count: Math.floor(Math.random() * 8) + 4, color: '#7f52ff' }
+            ];
+        } else {
+            // JavaScript developer profile
+            languages = [
+                { name: 'JavaScript', count: Math.floor(Math.random() * 25) + 35, color: '#f7df1e' },
+                { name: 'TypeScript', count: Math.floor(Math.random() * 20) + 15, color: '#3178c6' },
+                { name: 'Python', count: Math.floor(Math.random() * 15) + 10, color: '#3776ab' },
+                { name: 'Java', count: Math.floor(Math.random() * 12) + 8, color: '#ed8b00' },
+                { name: 'C++', count: Math.floor(Math.random() * 10) + 5, color: '#00599c' }
+            ];
+        }
 
-        languageList.innerHTML = languages.map(lang => `
-            <div class="language-item">
+        // Sort languages by count (descending)
+        languages.sort((a, b) => b.count - a.count);
+
+        languageList.innerHTML = languages.map((lang, index) => `
+            <div class="language-item ${index === 0 ? 'primary-language' : ''}">
                 <div style="display: flex; align-items: center; gap: 8px;">
                     <div style="width: 12px; height: 12px; border-radius: 50%; background: ${lang.color};"></div>
                     <span>${lang.name}</span>
+                    ${index === 0 ? '<span class="primary-badge">Primary</span>' : ''}
                 </div>
                 <span>${lang.count} problems</span>
             </div>
@@ -803,7 +842,7 @@ class LeetMetric {
 
 // Initialize the application when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    new LeetMetric();
+    window.leetMetricInstance = new LeetMetric();
 });
 
 // Add keyboard navigation
@@ -839,8 +878,10 @@ class AIChat {
         this.isMinimized = false;
         this.messageHistory = [];
         this.isTyping = false;
+        this.preferredLanguage = 'cpp'; // Default to C++
         this.knowledgeBase = this.initializeKnowledgeBase();
         this.initializeChat();
+        this.initializeLanguagePreference();
     }
 
     initializeChat() {
@@ -883,6 +924,79 @@ class AIChat {
         });
     }
 
+    initializeLanguagePreference() {
+        // Get saved language preference or default to C++
+        this.preferredLanguage = localStorage.getItem('preferredLanguage') || 'cpp';
+        
+        // Add language selection UI to chat
+        this.addLanguageSelector();
+    }
+
+    addLanguageSelector() {
+        // This will be called after the chat is opened for the first time
+        setTimeout(() => {
+            const chatBody = document.getElementById('chat-body');
+            if (chatBody && !document.getElementById('language-selector')) {
+                const languageSelector = document.createElement('div');
+                languageSelector.id = 'language-selector';
+                languageSelector.innerHTML = `
+                    <div style="padding: 12px 20px; border-bottom: 1px solid var(--border-color); background: var(--background-light);">
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                            <i class="fas fa-code" style="color: var(--primary-color);"></i>
+                            <span style="font-weight: 600; font-size: 0.9rem; color: var(--text-primary);">Preferred Language:</span>
+                        </div>
+                        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                            <button class="lang-btn ${this.preferredLanguage === 'cpp' ? 'active' : ''}" data-lang="cpp">C++</button>
+                            <button class="lang-btn ${this.preferredLanguage === 'python' ? 'active' : ''}" data-lang="python">Python</button>
+                            <button class="lang-btn ${this.preferredLanguage === 'java' ? 'active' : ''}" data-lang="java">Java</button>
+                            <button class="lang-btn ${this.preferredLanguage === 'javascript' ? 'active' : ''}" data-lang="javascript">JavaScript</button>
+                        </div>
+                    </div>
+                `;
+                
+                // Insert after chat header
+                chatBody.insertBefore(languageSelector, chatBody.firstChild);
+                
+                // Add event listeners for language selection
+                document.querySelectorAll('.lang-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        this.setPreferredLanguage(e.target.dataset.lang);
+                    });
+                });
+            }
+        }, 100);
+    }
+
+    setPreferredLanguage(language) {
+        this.preferredLanguage = language;
+        localStorage.setItem('preferredLanguage', language);
+        
+        // Update UI
+        document.querySelectorAll('.lang-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        document.querySelector(`[data-lang="${language}"]`).classList.add('active');
+        
+        // Update language stats in the main dashboard to reflect the new preference
+        const leetMetricInstance = window.leetMetricInstance;
+        if (leetMetricInstance) {
+            leetMetricInstance.updateLanguageStats({});
+        }
+        
+        // Show confirmation message
+        this.addMessage('ai', `Great! I'll now show code examples in ${this.getLanguageName(language)}. Your skills section has been updated to reflect your ${this.getLanguageName(language)} expertise! 🎯`);
+    }
+
+    getLanguageName(lang) {
+        const names = {
+            'cpp': 'C++',
+            'python': 'Python', 
+            'java': 'Java',
+            'javascript': 'JavaScript'
+        };
+        return names[lang] || lang;
+    }
+
     initializeKnowledgeBase() {
         return {
             algorithms: {
@@ -890,7 +1004,25 @@ class AIChat {
                     explanation: "Binary search is an efficient algorithm for searching sorted arrays. It works by repeatedly dividing the search space in half.",
                     timeComplexity: "O(log n)",
                     spaceComplexity: "O(1)",
-                    code: `def binary_search(arr, target):
+                    code: {
+                        cpp: `int binarySearch(vector<int>& arr, int target) {
+    int left = 0, right = arr.size() - 1;
+    
+    while (left <= right) {
+        int mid = left + (right - left) / 2;
+        
+        if (arr[mid] == target) {
+            return mid;
+        } else if (arr[mid] < target) {
+            left = mid + 1;
+        } else {
+            right = mid - 1;
+        }
+    }
+    
+    return -1;
+}`,
+                        python: `def binary_search(arr, target):
     left, right = 0, len(arr) - 1
     
     while left <= right:
@@ -903,18 +1035,150 @@ class AIChat {
             right = mid - 1
     
     return -1`,
+                        java: `public int binarySearch(int[] arr, int target) {
+    int left = 0, right = arr.length - 1;
+    
+    while (left <= right) {
+        int mid = left + (right - left) / 2;
+        
+        if (arr[mid] == target) {
+            return mid;
+        } else if (arr[mid] < target) {
+            left = mid + 1;
+        } else {
+            right = mid - 1;
+        }
+    }
+    
+    return -1;
+}`,
+                        javascript: `function binarySearch(arr, target) {
+    let left = 0, right = arr.length - 1;
+    
+    while (left <= right) {
+        let mid = Math.floor((left + right) / 2);
+        
+        if (arr[mid] === target) {
+            return mid;
+        } else if (arr[mid] < target) {
+            left = mid + 1;
+        } else {
+            right = mid - 1;
+        }
+    }
+    
+    return -1;
+}`
+                    },
                     tips: "Always remember to check if the array is sorted first!"
                 },
                 'dynamic programming': {
                     explanation: "Dynamic Programming is a method for solving complex problems by breaking them down into simpler subproblems.",
                     approach: "1. Define the problem recursively\n2. Identify overlapping subproblems\n3. Store solutions to subproblems\n4. Build up solutions bottom-up",
                     examples: "Fibonacci, Longest Common Subsequence, Knapsack Problem",
+                    code: {
+                        cpp: `// Fibonacci with DP
+int fibonacci(int n) {
+    if (n <= 1) return n;
+    
+    vector<int> dp(n + 1);
+    dp[0] = 0;
+    dp[1] = 1;
+    
+    for (int i = 2; i <= n; i++) {
+        dp[i] = dp[i-1] + dp[i-2];
+    }
+    
+    return dp[n];
+}
+
+// Longest Common Subsequence
+int longestCommonSubsequence(string text1, string text2) {
+    int m = text1.length(), n = text2.length();
+    vector<vector<int>> dp(m + 1, vector<int>(n + 1, 0));
+    
+    for (int i = 1; i <= m; i++) {
+        for (int j = 1; j <= n; j++) {
+            if (text1[i-1] == text2[j-1]) {
+                dp[i][j] = dp[i-1][j-1] + 1;
+            } else {
+                dp[i][j] = max(dp[i-1][j], dp[i][j-1]);
+            }
+        }
+    }
+    
+    return dp[m][n];
+}`,
+                        python: `# Fibonacci with DP
+def fibonacci(n):
+    if n <= 1:
+        return n
+    
+    dp = [0] * (n + 1)
+    dp[1] = 1
+    
+    for i in range(2, n + 1):
+        dp[i] = dp[i-1] + dp[i-2]
+    
+    return dp[n]
+
+# Longest Common Subsequence
+def longest_common_subsequence(text1, text2):
+    m, n = len(text1), len(text2)
+    dp = [[0] * (n + 1) for _ in range(m + 1)]
+    
+    for i in range(1, m + 1):
+        for j in range(1, n + 1):
+            if text1[i-1] == text2[j-1]:
+                dp[i][j] = dp[i-1][j-1] + 1
+            else:
+                dp[i][j] = max(dp[i-1][j], dp[i][j-1])
+    
+    return dp[m][n]`
+                    },
                     tips: "Start with the recursive solution, then optimize with memoization or tabulation."
                 },
                 'two pointers': {
                     explanation: "Two pointers technique uses two pointers moving towards each other or in the same direction to solve problems efficiently.",
                     useCases: "Sorted arrays, palindromes, sum problems, sliding window",
-                    code: `def two_sum_sorted(arr, target):
+                    code: {
+                        cpp: `// Two Sum in Sorted Array
+vector<int> twoSum(vector<int>& numbers, int target) {
+    int left = 0, right = numbers.size() - 1;
+    
+    while (left < right) {
+        int sum = numbers[left] + numbers[right];
+        if (sum == target) {
+            return {left + 1, right + 1}; // 1-indexed
+        } else if (sum < target) {
+            left++;
+        } else {
+            right--;
+        }
+    }
+    
+    return {};
+}
+
+// Valid Palindrome
+bool isPalindrome(string s) {
+    int left = 0, right = s.length() - 1;
+    
+    while (left < right) {
+        while (left < right && !isalnum(s[left])) left++;
+        while (left < right && !isalnum(s[right])) right--;
+        
+        if (tolower(s[left]) != tolower(s[right])) {
+            return false;
+        }
+        
+        left++;
+        right--;
+    }
+    
+    return true;
+}`,
+                        python: `def two_sum_sorted(arr, target):
     left, right = 0, len(arr) - 1
     
     while left < right:
@@ -927,48 +1191,144 @@ class AIChat {
             right -= 1
     
     return []`
+                    }
+                },
+                'sliding window': {
+                    explanation: "Sliding window technique is used to solve problems involving subarrays or substrings efficiently.",
+                    code: {
+                        cpp: `// Maximum Sum Subarray of Size K
+int maxSumSubarray(vector<int>& arr, int k) {
+    int windowSum = 0;
+    for (int i = 0; i < k; i++) {
+        windowSum += arr[i];
+    }
+    
+    int maxSum = windowSum;
+    for (int i = k; i < arr.size(); i++) {
+        windowSum = windowSum - arr[i - k] + arr[i];
+        maxSum = max(maxSum, windowSum);
+    }
+    
+    return maxSum;
+}
+
+// Longest Substring Without Repeating Characters
+int lengthOfLongestSubstring(string s) {
+    unordered_set<char> charSet;
+    int left = 0, maxLength = 0;
+    
+    for (int right = 0; right < s.length(); right++) {
+        while (charSet.count(s[right])) {
+            charSet.erase(s[left]);
+            left++;
+        }
+        charSet.insert(s[right]);
+        maxLength = max(maxLength, right - left + 1);
+    }
+    
+    return maxLength;
+}`
+                    }
                 }
             },
             dataStructures: {
                 'arrays': "Contiguous memory locations storing elements of same type. O(1) access, O(n) search.",
                 'linked lists': "Linear data structure with nodes containing data and pointers. O(1) insertion/deletion at head.",
                 'trees': "Hierarchical structure with nodes. Binary trees, BST, AVL, etc. Great for searching and sorting.",
-                'graphs': "Networks of vertices and edges. Used for modeling relationships and pathfinding."
+                'graphs': "Networks of vertices and edges. Used for modeling relationships and pathfinding.",
+                'stacks': "LIFO data structure. Perfect for function calls, expression evaluation, backtracking.",
+                'queues': "FIFO data structure. Used in BFS, task scheduling, buffering.",
+                'hash maps': "Key-value pairs with O(1) average access time. Great for lookups and counting."
+            },
+            cppSpecific: {
+                'stl': {
+                    explanation: "Standard Template Library provides powerful containers and algorithms",
+                    containers: "vector, deque, list, set, map, unordered_set, unordered_map, stack, queue, priority_queue",
+                    algorithms: "sort, binary_search, lower_bound, upper_bound, accumulate, transform",
+                    code: `// Common STL Usage Examples
+#include <vector>
+#include <algorithm>
+#include <unordered_map>
+#include <set>
+
+// Vector operations
+vector<int> v = {3, 1, 4, 1, 5};
+sort(v.begin(), v.end());
+auto it = lower_bound(v.begin(), v.end(), 3);
+
+// Hash Map
+unordered_map<int, int> freq;
+for (int num : v) {
+    freq[num]++;
+}
+
+// Set operations
+set<int> uniqueElements(v.begin(), v.end());
+
+// Priority Queue (Max Heap)
+priority_queue<int> maxHeap;
+for (int num : v) {
+    maxHeap.push(num);
+}`
+                },
+                'pointers': {
+                    explanation: "Pointers store memory addresses and enable efficient memory management",
+                    code: `// Pointer basics
+int x = 10;
+int* ptr = &x;  // ptr stores address of x
+*ptr = 20;      // Dereference: change value at address
+
+// Dynamic memory allocation
+int* arr = new int[5];
+// Use arr...
+delete[] arr;  // Don't forget to deallocate
+
+// Smart pointers (C++11+)
+#include <memory>
+unique_ptr<int> smartPtr = make_unique<int>(42);
+shared_ptr<int> sharedPtr = make_shared<int>(100);`
+                }
             },
             studyPlans: {
                 beginner: [
-                    "Start with Arrays and Strings",
-                    "Learn basic sorting algorithms",
+                    "Start with Arrays and Strings (C++ vectors and string class)",
+                    "Learn basic sorting algorithms (use STL sort)",
                     "Practice with easy problems daily",
-                    "Focus on understanding time complexity"
+                    "Focus on understanding time complexity",
+                    "Master STL containers: vector, map, set"
                 ],
                 intermediate: [
                     "Master Trees and Graphs",
                     "Learn Dynamic Programming patterns",
                     "Practice medium difficulty problems",
-                    "Study system design basics"
+                    "Study advanced STL: algorithms, iterators",
+                    "Learn about pointers and memory management"
                 ],
                 advanced: [
                     "Advanced algorithms (segment trees, etc.)",
                     "Competitive programming techniques",
                     "Hard problems and optimization",
-                    "System design and scalability"
+                    "System design and scalability",
+                    "Template metaprogramming and advanced C++"
                 ]
             },
             interview: {
                 preparation: [
-                    "Practice coding 1-2 hours daily",
+                    "Practice coding 1-2 hours daily (focus on C++)",
                     "Mock interviews with peers",
                     "Review fundamental concepts",
                     "Learn to explain your thought process",
-                    "Practice on whiteboard/paper"
+                    "Practice on whiteboard/paper",
+                    "Master STL and its time complexities"
                 ],
                 tips: [
                     "Always clarify the problem first",
                     "Think out loud during coding",
                     "Start with brute force, then optimize",
+                    "Use appropriate STL containers",
                     "Test your code with examples",
-                    "Discuss time and space complexity"
+                    "Discuss time and space complexity",
+                    "Handle edge cases (null pointers, empty arrays)"
                 ]
             }
         };
@@ -1124,19 +1484,69 @@ class AIChat {
     generateResponse(message) {
         const lowerMessage = message.toLowerCase();
         
-        // Algorithm explanations
+        // Language detection in message
+        if (lowerMessage.includes('c++') || lowerMessage.includes('cpp')) {
+            this.setPreferredLanguage('cpp');
+        } else if (lowerMessage.includes('python')) {
+            this.setPreferredLanguage('python');
+        } else if (lowerMessage.includes('java') && !lowerMessage.includes('javascript')) {
+            this.setPreferredLanguage('java');
+        } else if (lowerMessage.includes('javascript') || lowerMessage.includes('js')) {
+            this.setPreferredLanguage('javascript');
+        }
+
+        // STL and C++ specific queries
+        if (lowerMessage.includes('stl') || lowerMessage.includes('standard template library')) {
+            const stlInfo = this.knowledgeBase.cppSpecific.stl;
+            return `**🔧 C++ Standard Template Library (STL)**
+
+${stlInfo.explanation}
+
+**Main Containers:** ${stlInfo.containers}
+**Common Algorithms:** ${stlInfo.algorithms}
+
+**STL Usage Examples:**
+\`\`\`cpp
+${stlInfo.code}
+\`\`\`
+
+**💡 Pro Tip:** STL containers and algorithms are highly optimized. Always prefer them over manual implementations!`;
+        }
+
+        if (lowerMessage.includes('pointer') && (lowerMessage.includes('c++') || this.preferredLanguage === 'cpp')) {
+            const pointerInfo = this.knowledgeBase.cppSpecific.pointers;
+            return `**🎯 C++ Pointers Guide**
+
+${pointerInfo.explanation}
+
+**Pointer Examples:**
+\`\`\`cpp
+${pointerInfo.code}
+\`\`\`
+
+**💡 Memory Management Tips:**
+• Always initialize pointers
+• Use smart pointers when possible
+• Match every \`new\` with \`delete\`
+• Prefer \`vector\` over raw arrays`;
+        }
+
+        // Algorithm explanations with language preference
         if (lowerMessage.includes('binary search')) {
             const info = this.knowledgeBase.algorithms['binary search'];
-            return `**Binary Search Algorithm**
+            const code = info.code[this.preferredLanguage] || info.code.cpp;
+            const langName = this.getLanguageName(this.preferredLanguage);
+            
+            return `**🔍 Binary Search Algorithm**
 
 ${info.explanation}
 
 **Time Complexity:** ${info.timeComplexity}
 **Space Complexity:** ${info.spaceComplexity}
 
-**Python Implementation:**
-\`\`\`python
-${info.code}
+**${langName} Implementation:**
+\`\`\`${this.preferredLanguage === 'cpp' ? 'cpp' : this.preferredLanguage}
+${code}
 \`\`\`
 
 **💡 Pro Tip:** ${info.tips}`;
@@ -1144,7 +1554,10 @@ ${info.code}
 
         if (lowerMessage.includes('dynamic programming') || lowerMessage.includes('dp')) {
             const info = this.knowledgeBase.algorithms['dynamic programming'];
-            return `**Dynamic Programming (DP)**
+            const code = info.code[this.preferredLanguage] || info.code.cpp;
+            const langName = this.getLanguageName(this.preferredLanguage);
+            
+            return `**🧠 Dynamic Programming (DP)**
 
 ${info.explanation}
 
@@ -1153,54 +1566,142 @@ ${info.approach}
 
 **Common Examples:** ${info.examples}
 
+**${langName} Implementation Examples:**
+\`\`\`${this.preferredLanguage === 'cpp' ? 'cpp' : this.preferredLanguage}
+${code}
+\`\`\`
+
 **💡 Pro Tip:** ${info.tips}`;
         }
 
         if (lowerMessage.includes('two pointer')) {
             const info = this.knowledgeBase.algorithms['two pointers'];
-            return `**Two Pointers Technique**
+            const code = info.code[this.preferredLanguage] || info.code.cpp;
+            const langName = this.getLanguageName(this.preferredLanguage);
+            
+            return `**👆 Two Pointers Technique**
 
 ${info.explanation}
 
 **Common Use Cases:** ${info.useCases}
 
-**Example Implementation:**
-\`\`\`python
-${info.code}
-\`\`\``;
+**${langName} Implementation:**
+\`\`\`${this.preferredLanguage === 'cpp' ? 'cpp' : this.preferredLanguage}
+${code}
+\`\`\`
+
+**💡 Perfect for:** Sorted arrays, palindromes, sum problems, and sliding window scenarios!`;
         }
 
-        // Study plans
+        if (lowerMessage.includes('sliding window')) {
+            const info = this.knowledgeBase.algorithms['sliding window'];
+            const code = info.code[this.preferredLanguage] || info.code.cpp;
+            const langName = this.getLanguageName(this.preferredLanguage);
+            
+            return `**🪟 Sliding Window Technique**
+
+${info.explanation}
+
+**${langName} Implementation Examples:**
+\`\`\`${this.preferredLanguage === 'cpp' ? 'cpp' : this.preferredLanguage}
+${code}
+\`\`\`
+
+**💡 When to Use:** Fixed/variable size subarrays, substring problems, optimization problems`;
+        }
+
+        // C++ specific study plan
         if (lowerMessage.includes('study plan') || lowerMessage.includes('how to start')) {
+            const plans = this.knowledgeBase.studyPlans;
+            const langSpecificTip = this.preferredLanguage === 'cpp' ? 
+                "\n**🚀 C++ Specific Tips:**\n• Master STL containers and algorithms\n• Understand pointers and memory management\n• Practice with competitive programming style\n• Learn about templates and operator overloading" : "";
+            
             return `**📚 LeetCode Study Plans**
 
 **For Beginners:**
-${this.knowledgeBase.studyPlans.beginner.map(item => `• ${item}`).join('\n')}
+${plans.beginner.map(item => `• ${item}`).join('\n')}
 
 **For Intermediate:**
-${this.knowledgeBase.studyPlans.intermediate.map(item => `• ${item}`).join('\n')}
+${plans.intermediate.map(item => `• ${item}`).join('\n')}
 
 **For Advanced:**
-${this.knowledgeBase.studyPlans.advanced.map(item => `• ${item}`).join('\n')}
+${plans.advanced.map(item => `• ${item}`).join('\n')}${langSpecificTip}
 
 Which level matches your current skills?`;
         }
 
-        // Interview preparation
+        // Interview preparation with C++ focus
         if (lowerMessage.includes('interview') || lowerMessage.includes('preparation')) {
+            const interview = this.knowledgeBase.interview;
+            const langSpecificTips = this.preferredLanguage === 'cpp' ?
+                "\n**🎯 C++ Interview Specifics:**\n• Know STL complexities by heart\n• Be ready to explain pointers vs references\n• Understand memory management\n• Practice writing clean, readable C++ code" : "";
+            
             return `**🎯 Coding Interview Preparation**
 
 **Preparation Strategy:**
-${this.knowledgeBase.interview.preparation.map(item => `• ${item}`).join('\n')}
+${interview.preparation.map(item => `• ${item}`).join('\n')}
 
 **During the Interview:**
-${this.knowledgeBase.interview.tips.map(item => `• ${item}`).join('\n')}
+${interview.tips.map(item => `• ${item}`).join('\n')}${langSpecificTips}
 
 **Remember:** Practice makes perfect! Start with easy problems and gradually increase difficulty.`;
         }
 
-        // Time complexity
+        // Language-specific help
+        if (lowerMessage.includes('help') || lowerMessage.includes('what can you do')) {
+            const langName = this.getLanguageName(this.preferredLanguage);
+            return `**🤖 I'm here to help you with ${langName} and LeetCode!**
+
+**📚 I can assist with:**
+• **Algorithm explanations** (with ${langName} code examples)
+• **Data structure guidance** (${langName} implementations)
+• **STL mastery** (for C++ users)
+• **Problem-solving strategies** and techniques
+• **Interview preparation** tips and mock questions
+• **Study plans** tailored to your level
+• **Code optimization** and complexity analysis
+• **Debugging** assistance and best practices
+
+**🔧 Current language preference:** ${langName}
+*You can change this anytime by clicking the language buttons above!*
+
+Just ask me anything about coding, algorithms, or LeetCode problems!`;
+        }
+
+        // C++ vector and STL questions
+        if (lowerMessage.includes('vector') && this.preferredLanguage === 'cpp') {
+            return `**📊 C++ Vector Guide**
+
+**Declaration & Initialization:**
+\`\`\`cpp
+vector<int> v1;                    // Empty vector
+vector<int> v2(5);                // Size 5, default values
+vector<int> v3(5, 10);            // Size 5, all elements = 10
+vector<int> v4 = {1, 2, 3, 4, 5}; // Initializer list
+\`\`\`
+
+**Common Operations:**
+\`\`\`cpp
+v.push_back(x);     // Add element to end - O(1)
+v.pop_back();       // Remove last element - O(1)
+v.size();           // Get size - O(1)
+v.empty();          // Check if empty - O(1)
+v[i];               // Access element - O(1)
+v.at(i);            // Safe access with bounds checking
+v.clear();          // Remove all elements
+\`\`\`
+
+**💡 Pro Tips:**
+• Use \`reserve()\` if you know the approximate size
+• Prefer \`emplace_back()\` over \`push_back()\` for objects
+• Use range-based for loops: \`for(auto x : v)\``;
+        }
+
+        // Time complexity with C++ STL focus
         if (lowerMessage.includes('time complexity') || lowerMessage.includes('big o')) {
+            const cppComplexities = this.preferredLanguage === 'cpp' ? 
+                "\n**🔧 C++ STL Complexities:**\n• vector access: O(1), push_back: O(1) amortized\n• map: O(log n) for all operations\n• unordered_map: O(1) average, O(n) worst\n• set: O(log n) for insert/find/erase\n• sort(): O(n log n)" : "";
+
             return `**⏰ Time Complexity (Big O) Guide**
 
 **Common Complexities (Best to Worst):**
@@ -1209,7 +1710,7 @@ ${this.knowledgeBase.interview.tips.map(item => `• ${item}`).join('\n')}
 • **O(n)** - Linear: Simple loops, array traversal
 • **O(n log n)** - Linearithmic: Efficient sorting (merge sort, quick sort)
 • **O(n²)** - Quadratic: Nested loops, bubble sort
-• **O(2^n)** - Exponential: Recursive fibonacci, subset generation
+• **O(2^n)** - Exponential: Recursive fibonacci, subset generation${cppComplexities}
 
 **💡 Tips:**
 • Always aim for the most efficient solution
@@ -1217,69 +1718,14 @@ ${this.knowledgeBase.interview.tips.map(item => `• ${item}`).join('\n')}
 • Practice analyzing your code's complexity`;
         }
 
-        // Data structures
-        if (lowerMessage.includes('data structure')) {
-            return `**🏗️ Essential Data Structures**
-
-${Object.entries(this.knowledgeBase.dataStructures).map(([name, desc]) => 
-            `**${name.charAt(0).toUpperCase() + name.slice(1)}:** ${desc}`
-        ).join('\n\n')}
-
-Which data structure would you like to learn more about?`;
-        }
-
-        // Problem-solving strategies
-        if (lowerMessage.includes('how to solve') || lowerMessage.includes('approach')) {
-            return `**🎯 Problem-Solving Strategy**
-
-**1. Understand the Problem**
-• Read carefully and identify inputs/outputs
-• Look for edge cases and constraints
-• Ask clarifying questions
-
-**2. Plan Your Approach**
-• Start with brute force solution
-• Think about optimizations
-• Consider different data structures
-
-**3. Code & Test**
-• Write clean, readable code
-• Test with given examples
-• Check edge cases
-
-**4. Optimize**
-• Analyze time/space complexity
-• Look for bottlenecks
-• Consider alternative approaches
-
-**5. Review & Learn**
-• Understand why your solution works
-• Learn from other solutions
-• Practice similar problems`;
-        }
-
-        // Default responses for common questions
-        if (lowerMessage.includes('help') || lowerMessage.includes('what can you do')) {
-            return `**🤖 I'm here to help you with:**
-
-• **Algorithm explanations** (binary search, DP, graphs, etc.)
-• **Data structure guidance** (arrays, trees, hash tables, etc.)
-• **Problem-solving strategies** and techniques
-• **Interview preparation** tips and mock questions
-• **Study plans** tailored to your level
-• **Code optimization** and complexity analysis
-• **Debugging** assistance and best practices
-
-Just ask me anything about coding, algorithms, or LeetCode problems!`;
-        }
-
-        // Random encouraging responses
+        // Default encouraging responses with language awareness
+        const langName = this.getLanguageName(this.preferredLanguage);
         const encouragingResponses = [
-            "Great question! Let me help you with that. Could you be more specific about what aspect you'd like to focus on?",
-            "I'd love to help! Can you provide more details about the specific problem or concept you're working on?",
-            "That's a good topic to explore! What specific part would you like me to explain or help you with?",
-            "Excellent! I can definitely assist with that. Could you share more context about your current understanding or where you're stuck?",
-            "I'm here to help you master that concept! What would be most helpful - an explanation, examples, or practice problems?"
+            `Great question! I'll help you with ${langName} solutions. Could you be more specific about what aspect you'd like to focus on?`,
+            `I'd love to help with ${langName}! Can you provide more details about the specific problem or concept you're working on?`,
+            `That's a good topic to explore! What specific part would you like me to explain with ${langName} examples?`,
+            `Excellent! I can definitely assist with ${langName} code. Could you share more context about your current understanding or where you're stuck?`,
+            `I'm here to help you master that concept in ${langName}! What would be most helpful - an explanation, examples, or practice problems?`
         ];
 
         return encouragingResponses[Math.floor(Math.random() * encouragingResponses.length)];
